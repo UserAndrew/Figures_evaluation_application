@@ -1,9 +1,7 @@
-#include <algorithm>
 #include <iostream>
 #include <ciso646>
 #include <iomanip>
 #include <vector>
-#include <string>
 #include <cmath>
 
 
@@ -13,29 +11,37 @@ struct Point
     double y;
 };
 
+enum class Figures
+{
+    CIRCLE,
+    RECTANGLE,
+    TRIANGLE
+};
+
 class IFigure
 {
 public:
     virtual IFigure* getPtr() = 0;
-    virtual std::string getType() = 0;
+    virtual Figures getType() = 0;
 };
 
 class Rectangle : public IFigure
 {
-public:
-    Point first_point, second_point, third_point, fourth_point;
-    std::string type;
+friend double calculatingArea(IFigure* figure);
 
-    Rectangle(double x1, double y1, double x2, double y2, \
-               double x3, double y3, double x4, double y4) {
-        first_point.x = x1;
-        first_point.y = y1;
-        second_point.x = x2;
-        second_point.y = y2;
-        third_point.x = x3;
-        third_point.y = y3;
-        fourth_point.x = x4;
-        fourth_point.y = y4;
+private:
+    Point first_point, second_point, third_point, fourth_point;
+
+public:
+    Rectangle(Point p1, Point p2, Point p3, Point p4) {
+        first_point.x = p1.x;
+        first_point.y = p1.y;
+        second_point.x = p2.x;
+        second_point.y = p2.y;
+        third_point.x = p3.x;
+        third_point.y = p3.y;
+        fourth_point.x = p4.x;
+        fourth_point.y = p4.y;
     }
 
     Rectangle* getPtr() override {
@@ -52,30 +58,30 @@ public:
         double d = std::sqrt(std::pow(fourth_point.x-first_point.x, 2) + \
                              std::pow(fourth_point.y-first_point.y, 2));
 
-        return (a==b);
+        return (a==b and b==c and c==d);
     }
 
-    std::string getType() override {
-        std::string type = "Rectangle";
-
-        return type;
+    Figures getType() override {
+        return Figures::RECTANGLE;
     }
 
 };
 
 class Triangle : public IFigure
 {
-public:
-    Point first_point, second_point, third_point;
-    std::string type;
+friend double calculatingArea(IFigure* figure);
 
-    Triangle(double x1, double y1, double x2, double y2, double x3, double y3) {
-        first_point.x = x1;
-        first_point.y = y1;
-        second_point.x = x2;
-        second_point.y = y2;
-        third_point.x = x3;
-        third_point.y = y3;
+private:
+    Point first_point, second_point, third_point;
+
+public:
+    Triangle(Point p1, Point p2, Point p3) {
+        first_point.x = p1.x;
+        first_point.y = p1.y;
+        second_point.x = p2.x;
+        second_point.y = p2.y;
+        third_point.x = p3.x;
+        third_point.y = p3.y;
     }
 
     Triangle* getPtr() override {
@@ -97,23 +103,23 @@ public:
 
     }
 
-    std::string getType() override {
-        std::string type = "Triangle";
-
-        return type;
+    Figures getType() override {
+        return Figures::TRIANGLE;
     }
 };
 
 class Circle : public IFigure
 {
-public:
+friend double calculatingArea(IFigure* figure);
+
+private:
     Point center_point;
     double radius;
-    std::string type;
 
-    Circle(double x0, double y0, double radius) {
-        center_point.x = x0;
-        center_point.y = y0;
+public:
+    Circle(Point p, double radius) {
+        center_point.x = p.x;
+        center_point.y = p.y;
         this->radius = radius;
     }
 
@@ -121,16 +127,14 @@ public:
         return this;
     }
 
-    std::string getType() override {
-        std::string type = "Circle";
-
-        return type;
+    Figures getType() override {
+        return Figures::CIRCLE;
     }
 };
 
 double calculatingArea(IFigure* figure) {
     double area;
-    if(figure->getType() == "Rectangle") {
+    if(figure->getType() == Figures::RECTANGLE) {
         Rectangle *rec = dynamic_cast<Rectangle*>(figure);
         if(rec) {
             if(rec->isSquare()) {
@@ -146,7 +150,7 @@ double calculatingArea(IFigure* figure) {
             }
         }
     }
-    else if(figure->getType() == "Triangle"){
+    else if(figure->getType() == Figures::TRIANGLE){
         Triangle *tr = dynamic_cast<Triangle*>(figure);
         if(tr) {
             double length_AB = std::sqrt(std::pow(tr->second_point.x - tr->first_point.x, 2) + \
@@ -158,15 +162,16 @@ double calculatingArea(IFigure* figure) {
 
             double semiperimeter = 0.5*(length_AB + length_BC + length_AC);
 
-            area = std::sqrt(semiperimeter*(semiperimeter - length_AB)*(semiperimeter - length_AC)*(semiperimeter - length_AC));
+            area = std::sqrt(semiperimeter*(semiperimeter - length_AB)*(semiperimeter - length_BC)*(semiperimeter - length_AC));
         }
     }
-    else if(figure->getType() == "Circle") {
+    else if(figure->getType() == Figures::CIRCLE) {
         Circle *crl = dynamic_cast<Circle*>(figure);
         if(crl) {
             area = M_PI*(crl->radius)*(crl->radius);
         }
     }
+
     return area;
 }
 
@@ -174,10 +179,10 @@ int main()
 {
     std::vector<IFigure*> figures;
 
-    figures.emplace_back(new Circle(0, 0, 2));
-    figures.emplace_back(new Triangle(1.0, 1.0, 1.0, 5.0, 4.0, 1.0));
-    figures.emplace_back(new Rectangle(5, 5, 5, 10, 10, 10, 10, 5));
-    figures.emplace_back(new Rectangle(2.0, 2.1, 2.0, 4.1, 6.0, 4.1, 6.0, 2.1));
+    figures.emplace_back(new Circle({0.0, 0.0}, 2.0));
+    figures.emplace_back(new Triangle({1.0, 1.0}, {1.0, 5.0}, {4.0, 1.0}));
+    figures.emplace_back(new Rectangle({5.0, 5.0}, {5.0, 10.0}, {10.0, 10.0}, {10.0, 5.0}));
+    figures.emplace_back(new Rectangle({2.0, 2.1}, {2.0, 4.1}, {6.0, 4.1}, {6.0, 2.1}));
 
     for(auto& figure : figures) {
         try {
