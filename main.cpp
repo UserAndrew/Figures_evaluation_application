@@ -193,7 +193,10 @@ int main()
         }
     }
 
-    for(auto& figure : figures) delete figure;
+    for(auto& figure : figures) {
+            delete figure;
+            figure = nullptr;
+    }
 
     return 0;
 }
